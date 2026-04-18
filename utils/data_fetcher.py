@@ -163,7 +163,8 @@ def fetch_market_history(n_years: int = 5) -> pd.DataFrame:
             ORDER BY {date_col}
         """
         try:
-            df = conn.raw_sql(sql, date_cols=["date"])
+            from utils.wrds_fetcher import _sql
+            df = _sql(conn, sql, date_cols=["date"])
             if df is not None and not df.empty:
                 df = df.set_index("date")
                 df.index = pd.to_datetime(df.index)

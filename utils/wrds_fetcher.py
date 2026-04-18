@@ -17,6 +17,26 @@ import streamlit as st
 from datetime import datetime, timedelta
 
 
+def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
+    """
+    Run a SQL query via wrds connection, compatible with both old and new
+    wrds/pandas versions. Tries raw_sql() first; falls back to SQLAlchemy engine.
+    """
+    date_cols = date_cols or []
+    try:
+        return conn.raw_sql(sql, date_cols=date_cols)
+    except (AttributeError, TypeError):
+        pass
+    # Fallback: use the underlying SQLAlchemy engine directly
+    import sqlalchemy as sa
+    with conn.engine.connect() as c:
+        df = pd.read_sql_query(sa.text(sql), c)
+        for col in date_cols:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col])
+        return df
+
+
 # ─── Connection ───────────────────────────────────────────────────────────────
 
 def get_wrds_connection(username: str):
@@ -154,7 +174,7 @@ def get_compustat_annual(conn, ticker: str, n_years: int = 5) -> dict:
         LIMIT {n_years}
     """
     try:
-        raw = conn.raw_sql(sql, date_cols=["datadate"])
+        raw = _sql(conn, sql, date_cols=["datadate"])
     except Exception as e:
         st.warning(f"Compustat query failed for {ticker}: {e}")
         return {}
@@ -246,7 +266,7 @@ def get_crsp_prices(conn, ticker: str, n_years: int = 5) -> pd.DataFrame:
             ORDER BY permno DESC
             LIMIT 1
         """
-        permno_df = conn.raw_sql(permno_sql_v2)
+        permno_df = _sql(conn, permno_sql_v2)
         if permno_df is not None and not permno_df.empty:
             permno = int(permno_df.iloc[0]["permno"])
             price_sql_v2 = f"""
@@ -261,7 +281,7 @@ def get_crsp_prices(conn, ticker: str, n_years: int = 5) -> pd.DataFrame:
                   AND dlycaldt >= '{start_date}'
                 ORDER BY dlycaldt
             """
-            prices = conn.raw_sql(price_sql_v2, date_cols=["date"])
+            prices = _sql(conn, price_sql_v2, date_cols=["date"])
             if prices is not None and not prices.empty:
                 prices = prices.set_index("date")
                 prices.index = pd.to_datetime(prices.index)
@@ -280,7 +300,7 @@ def get_crsp_prices(conn, ticker: str, n_years: int = 5) -> pd.DataFrame:
             ORDER BY permno DESC
             LIMIT 1
         """
-        permno_df = conn.raw_sql(permno_sql_legacy)
+        permno_df = _sql(conn, permno_sql_legacy)
         if permno_df is not None and not permno_df.empty:
             permno = int(permno_df.iloc[0]["permno"])
             price_sql_legacy = f"""
@@ -293,7 +313,7 @@ def get_crsp_prices(conn, ticker: str, n_years: int = 5) -> pd.DataFrame:
                   AND date >= '{start_date}'
                 ORDER BY date
             """
-            prices = conn.raw_sql(price_sql_legacy, date_cols=["date"])
+            prices = _sql(conn, price_sql_legacy, date_cols=["date"])
             if prices is not None and not prices.empty:
                 prices = prices.set_index("date")
                 prices.index = pd.to_datetime(prices.index)
@@ -322,7 +342,7 @@ def get_compustat_peers(conn, ticker: str, n_peers: int = 5) -> list[str]:
         ORDER BY fyear DESC LIMIT 1
     """
     try:
-        sic_df = conn.raw_sql(sic_sql)
+        sic_df = _sql(conn, sic_sql)
         if sic_df is None or sic_df.empty:
             return []
         sic = int(sic_df.iloc[0]["sich"])
@@ -343,7 +363,7 @@ def get_compustat_peers(conn, ticker: str, n_peers: int = 5) -> list[str]:
         LIMIT {n_peers}
     """
     try:
-        peer_df = conn.raw_sql(peers_sql)
+        peer_df = _sql(conn, peers_sql)
         if peer_df is None or peer_df.empty:
             return []
         return peer_df["tic"].dropna().tolist()
