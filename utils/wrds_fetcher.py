@@ -19,18 +19,36 @@ from datetime import datetime, timedelta
 
 def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
     """
-    Run a SQL query via wrds connection, compatible with both old and new
-    wrds/pandas versions. Tries raw_sql() first; falls back to SQLAlchemy engine.
+    Run a SQL query via wrds connection, compatible with all wrds/pandas versions.
+    1. Try conn.raw_sql() (wrds native)
+    2. Try direct psycopg2 cursor via conn.connection
+    3. Try SQLAlchemy engine via conn.engine
     """
     date_cols = date_cols or []
+
+    # Attempt 1: wrds native
     try:
         return conn.raw_sql(sql, date_cols=date_cols)
-    except (AttributeError, TypeError):
+    except Exception:
         pass
-    # Fallback: use the underlying SQLAlchemy engine directly
+
+    # Attempt 2: direct psycopg2 cursor (bypasses pandas/SQLAlchemy entirely)
+    try:
+        cursor = conn.connection.cursor()
+        cursor.execute(sql)
+        cols = [d[0] for d in cursor.description]
+        df = pd.DataFrame(cursor.fetchall(), columns=cols)
+        for col in date_cols:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col])
+        return df
+    except Exception:
+        pass
+
+    # Attempt 3: SQLAlchemy engine
     import sqlalchemy as sa
     with conn.engine.connect() as c:
-        df = pd.read_sql_query(sa.text(sql), c)
+        df = pd.read_sql_query(sql, c)
         for col in date_cols:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
