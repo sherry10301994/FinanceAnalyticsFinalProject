@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -c ':*)",
+      "Read(//usr/local/bin/**)",
+      "Bash(conda info:*)",
+      "Bash(python3.12 -c \"import numpy, pandas, yfinance, streamlit, plotly; print\\('All OK'\\)\")",
+      "Bash(python3.12 -m pip install \"yfinance==0.2.48\" plotly streamlit pandas numpy requests scipy --quiet)",
+      "Bash(python3.12 -c ':*)",
+      "Bash(python3.12 -m pip install wrds --quiet)",
+      "Bash(pip3 list:*)",
+      "Bash(python3.12 --version)",
+      "Bash(pip3.12 list:*)",
+      "Bash(pip3.12 install:*)",
+      "Bash(python3 -c \"import streamlit; print\\(streamlit.__file__\\)\")",
+      "Bash(/Library/Frameworks/Python.framework/Versions/3.14/bin/pip install:*)",
+      "Bash(/Library/Frameworks/Python.framework/Versions/3.14/bin/python3 -m pip install \"anthropic>=0.25.0\")",
+      "Bash(/Library/Frameworks/Python.framework/Versions/3.14/bin/python3 -c \"import streamlit; print\\(streamlit.__version__\\)\")"
+    ]
+  }
+}

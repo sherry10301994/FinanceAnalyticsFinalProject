@@ -1,0 +1,10 @@
+streamlit>=1.32.0
+yfinance>=1.2.0
+pandas>=2.0.0
+numpy>=1.26.0
+plotly>=5.18.0
+requests>=2.31.0
+scipy>=1.12.0
+wrds>=3.1.6
+finnhub-python>=2.4.0
+vaderSentiment>=3.3.2
