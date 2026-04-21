@@ -132,26 +132,22 @@ def render_sidebar(default_ticker: str = "AAPL",
 
 
 def _connect_wrds(username: str, password: str):
-    """Attempt WRDS connection and store in session_state."""
+    """Attempt WRDS connection using psycopg2 directly (no pgpass file needed)."""
     try:
-        import wrds
-        import os, tempfile
+        import psycopg2
+        from utils.wrds_fetcher import _WRDSConn
 
-        # Write pgpass so wrds package doesn't prompt interactively
-        pgpass_path = os.path.expanduser("~/.pgpass")
-        pgpass_entry = f"wrds-pgdata.wharton.upenn.edu:9737:*:{username}:{password}\n"
-        existing = ""
-        if os.path.exists(pgpass_path):
-            with open(pgpass_path, "r") as f:
-                existing = f.read()
-        if username not in existing:
-            with open(pgpass_path, "a") as f:
-                f.write(pgpass_entry)
-            os.chmod(pgpass_path, 0o600)
-
-        conn = wrds.Connection(wrds_username=username)
-        st.session_state["wrds_conn"]      = conn
-        st.session_state["wrds_username"]  = username
+        raw = psycopg2.connect(
+            host="wrds-pgdata.wharton.upenn.edu",
+            port=9737,
+            dbname="wrds",
+            user=username,
+            password=password,
+            sslmode="require",
+        )
+        conn = _WRDSConn(raw)
+        st.session_state["wrds_conn"]     = conn
+        st.session_state["wrds_username"] = username
         invalidate_cache()
         st.success("✅ Connected to WRDS!")
         st.rerun()

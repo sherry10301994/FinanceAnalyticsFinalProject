@@ -17,6 +17,15 @@ import streamlit as st
 from datetime import datetime, timedelta
 
 
+class _WRDSConn:
+    """Thin wrapper around a raw psycopg2 connection, mimics wrds.Connection."""
+    def __init__(self, psycopg2_conn):
+        self.connection = psycopg2_conn
+
+    def raw_sql(self, sql: str, date_cols=None):
+        return _sql(self, sql, date_cols=date_cols)
+
+
 def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
     """
     Run a SQL query via wrds connection, compatible with all wrds/pandas versions.
