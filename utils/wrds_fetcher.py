@@ -47,6 +47,10 @@ def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
         cursor.execute(sql)
         cols = [d[0] for d in cursor.description]
         df = pd.DataFrame(cursor.fetchall(), columns=cols)
+        # psycopg2 returns decimal.Decimal for numeric columns — convert to float
+        for col in df.columns:
+            if col not in date_cols:
+                df[col] = pd.to_numeric(df[col], errors="ignore")
         for col in date_cols:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
