@@ -31,7 +31,7 @@ st.title(f"📰 News & Filings · {company_name} ({ticker})")
 tab1, tab2, tab3, tab4 = st.tabs([
     "📰 News Feed",
     "📈 Sentiment × Price",
-    "🤖 AI Analysis",
+    "🎯 Interview Prep",
     "📄 SEC Filings",
 ])
 
@@ -279,7 +279,7 @@ with tab3:
 
     col_hdr, col_btn = st.columns([4, 1])
     with col_hdr:
-        st.markdown("Claude analyzes the past year of news alongside key financials to produce structured talking points.")
+        st.markdown("Claude generates a tailored interview prep guide based on recent news and financial metrics.")
     with col_btn:
         run_btn = st.button("🤖 Run Analysis", type="primary", use_container_width=True)
 
@@ -320,60 +320,79 @@ with tab3:
     result = st.session_state.get(gpt_cache_key)
 
     if result is None and not run_btn:
-        st.info("Click **Run Analysis** to generate AI-powered talking points.")
+        st.info("Click **Run Analysis** to generate your interview prep guide.")
     elif result:
-        overall   = result.get("overall_sentiment", "Neutral")
-        gpt_score = result.get("sentiment_score", 0)
-
-        SENTIMENT_COLOR = {
-            "Positive": "#2ecc71",
-            "Neutral":  "#f39c12",
-            "Negative": "#e74c3c",
-        }
-        color = SENTIMENT_COLOR.get(overall, "#95a5a6")
-
-        st.markdown(
-            f"<h3 style='text-align:center'>"
-            f"Overall Sentiment: "
-            f"<span style='color:{color};background:{color}1a;"
-            f"padding:6px 20px;border-radius:10px;font-weight:700'>"
-            f"{overall} &nbsp;({gpt_score:+.2f})</span></h3>",
-            unsafe_allow_html=True,
-        )
-
-        if result.get("one_liner"):
-            st.info(f"**Executive Summary:** {result['one_liner']}")
+        # ── Company snapshot ──────────────────────────────────────────────────
+        if result.get("company_snapshot"):
+            st.info(result["company_snapshot"])
 
         st.divider()
 
+        # ── Likely interview questions ────────────────────────────────────────
+        if result.get("likely_questions"):
+            st.markdown("### 🎯 Likely Interview Questions")
+            for i, q in enumerate(result["likely_questions"], 1):
+                st.markdown(f"**Q{i}.** {q}")
+
+        st.divider()
+
+        # ── Answer frameworks ─────────────────────────────────────────────────
+        frameworks = result.get("answer_frameworks", {})
+        if frameworks:
+            st.markdown("### 🗂 How to Answer")
+            col_l, col_r = st.columns(2)
+            with col_l:
+                if frameworks.get("business_overview"):
+                    with st.expander("📌 Business Overview (60-sec answer)", expanded=True):
+                        st.write(frameworks["business_overview"])
+                if frameworks.get("investment_thesis"):
+                    with st.expander("📈 Investment Thesis Framework", expanded=True):
+                        st.write(frameworks["investment_thesis"])
+            with col_r:
+                if frameworks.get("valuation"):
+                    with st.expander("💰 Valuation Approach", expanded=True):
+                        st.write(frameworks["valuation"])
+
+        st.divider()
+
+        # ── Modeling guidance ─────────────────────────────────────────────────
+        if result.get("modeling_guidance"):
+            st.markdown("### 🔢 Modeling Guidance")
+            for tip in result["modeling_guidance"]:
+                st.markdown(f"- {tip}")
+
+        st.divider()
+
+        # ── Key metrics + Recent developments ────────────────────────────────
         col_l, col_r = st.columns(2)
-
         with col_l:
-            if result.get("key_themes"):
-                st.markdown("**🔍 Key Themes**")
-                for t in result["key_themes"]:
-                    st.markdown(f"- {t}")
-                st.markdown("")
-
-            if result.get("positive_catalysts"):
-                st.markdown("**✅ Positive Catalysts**")
-                for t in result["positive_catalysts"]:
-                    st.markdown(f"- {t}")
+            if result.get("key_metrics"):
+                st.markdown("### 📊 Key Metrics to Know")
+                for m in result["key_metrics"]:
+                    st.markdown(f"- {m}")
 
         with col_r:
-            if result.get("risk_factors"):
-                st.markdown("**⚠️ Risk Factors**")
-                for t in result["risk_factors"]:
-                    st.markdown(f"- {t}")
+            if result.get("recent_developments"):
+                st.markdown("### 📰 Recent Developments")
+                for d in result["recent_developments"]:
+                    st.markdown(f"- {d}")
 
         st.divider()
 
-        if result.get("talking_points"):
-            st.markdown("**🎤 Interview Talking Points**")
-            for i, tp in enumerate(result["talking_points"], 1):
-                st.markdown(f"**{i}.** {tp}")
+        # ── Upside / Downside ─────────────────────────────────────────────────
+        col_l, col_r = st.columns(2)
+        with col_l:
+            if result.get("upside_catalysts"):
+                st.markdown("**✅ Upside Catalysts**")
+                for c in result["upside_catalysts"]:
+                    st.markdown(f"- {c}")
+        with col_r:
+            if result.get("downside_risks"):
+                st.markdown("**⚠️ Downside Risks**")
+                for r in result["downside_risks"]:
+                    st.markdown(f"- {r}")
 
-        st.caption("Powered by Claude (Anthropic) · Based on last 12 months of news + current financial metrics")
+        st.caption("Powered by Claude (Anthropic) · Based on recent news + financial metrics")
 
 
 # ── Tab 4: SEC Filings ────────────────────────────────────────────────────────
