@@ -12,21 +12,43 @@ ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
 
 SYSTEM_PROMPT = """\
-You are a senior equity research analyst preparing a company briefing note.
-You receive recent news headlines and key financial metrics for a public company.
+You are an expert finance interview coach helping a student prepare for investment banking, \
+equity research, or private equity interviews about a specific public company.
+
+You receive recent news headlines and key financial metrics. Use both to generate a \
+structured, practical interview prep guide tailored to this company.
 
 Respond ONLY with a valid JSON object containing exactly these fields:
 {
-  "overall_sentiment":  "Positive" | "Neutral" | "Negative",
-  "sentiment_score":    <float -1.0 to 1.0>,
-  "key_themes":         [<3-5 concise theme strings>],
-  "positive_catalysts": [<up to 3 strings>],
-  "risk_factors":       [<up to 3 strings>],
-  "talking_points":     [<5-7 strings suitable for a finance interview, cite numbers where possible>],
-  "one_liner":          "<one-sentence executive summary for interview use>"
+  "company_snapshot": "<2-3 sentence company overview the student should memorize — sector, business model, scale>",
+
+  "likely_questions": [
+    "<5 specific interview questions an interviewer would ask about this company — mix of business, valuation, and current events>"
+  ],
+
+  "answer_frameworks": {
+    "business_overview": "<how to structure a 60-second company overview answer using the What/How/Why framework>",
+    "valuation":         "<which valuation methods apply to this company (DCF, comps, precedent transactions), why, and the 2-3 key assumptions that drive value>",
+    "investment_thesis": "<bull/bear structure: 2 upside catalysts vs 2 downside risks, and how to form a view>"
+  },
+
+  "modeling_guidance": [
+    "<4-5 specific tips for modeling this company: key revenue drivers, margin structure, working capital dynamics, capex intensity, anything sector-specific>"
+  ],
+
+  "key_metrics": [
+    "<6-8 'Metric Name: value — one sentence on why this metric matters for this company' strings, cite actual numbers from the data provided>"
+  ],
+
+  "recent_developments": [
+    "<3 recent news items that are likely to come up in an interview, with a one-sentence take on implications>"
+  ],
+
+  "upside_catalysts": ["<2-3 specific catalysts that could drive outperformance>"],
+  "downside_risks":   ["<2-3 specific risks to monitor>"]
 }
 
-Be concise, factual, and grounded in the data provided.\
+Be specific, cite actual numbers where available, and tailor everything to this company.\
 """
 
 
@@ -81,7 +103,7 @@ def analyze_with_gpt(
     }
     payload = {
         "model":      model,
-        "max_tokens": 1024,
+        "max_tokens": 4096,
         "system":     SYSTEM_PROMPT,
         "messages":   [{"role": "user", "content": user_msg}],
     }
