@@ -21,7 +21,7 @@ cashflow      = data["cashflow"]
 history       = data["history"]
 
 company_name = info.get("longName", ticker)
-st.title(f"📈 Trend Analysis · {company_name} ({ticker})")
+st.title(f"Trend Analysis · {company_name} ({ticker})")
 
 trend_df = build_trend_df(income_stmt, balance_sheet, cashflow)
 
@@ -50,7 +50,7 @@ def line_chart(df, cols, title, y_label, scale=1e9, height=320):
     return fig
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "💵 Income & Growth", "📊 Margins & Returns", "📉 Stock Price", "📦 Balance Sheet"
+    "Income & Growth", "Margins & Returns", "Stock Price", "Balance Sheet"
 ])
 
 # ── Tab 1 ─────────────────────────────────────────────────────────────────────

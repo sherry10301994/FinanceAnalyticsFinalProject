@@ -19,7 +19,7 @@ balance_sheet = data["balance_sheet"]
 cashflow      = data["cashflow"]
 
 company_name = info.get("longName", ticker)
-st.title(f"📊 KPI Dashboard · {company_name} ({ticker})")
+st.title(f"KPI Dashboard · {company_name} ({ticker})")
 
 def fmt(v, suffix="", decimals=2):
     return f"{v:,.{decimals}f}{suffix}" if v is not None else "N/A"
@@ -48,7 +48,7 @@ for i in range(n_years):
 most_recent = all_ratios[year_labels[0]] if year_labels else {}
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "💰 Profitability", "⚙️ Efficiency", "💧 Liquidity", "🏗️ Leverage", "📋 Summary Table"
+    "Profitability", "Efficiency", "Liquidity", "Leverage", "Summary Table"
 ])
 
 # ── Tab 1: Profitability ─────────────────────────────────────────────────────

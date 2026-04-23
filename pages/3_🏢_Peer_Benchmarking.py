@@ -11,7 +11,7 @@ from utils.financial_metrics import calculate_ratios, REVENUE_KEYS
 st.set_page_config(page_title="Peer Benchmarking · FinSight", layout="wide")
 ticker, peers = render_sidebar()
 
-st.title(f"🏢 Peer Benchmarking · {ticker} vs. Peers")
+st.title(f"Peer Benchmarking · {ticker} vs. Peers")
 
 # ─── Load all data ─────────────────────────────────────────────────────────────
 all_tickers = [ticker] + [p for p in peers if p != ticker]
@@ -65,7 +65,7 @@ for t in all_tickers:
         comp_df.loc[t, "1Y Return %"] = round(ret, 1)
 
 # ─── Summary table ─────────────────────────────────────────────────────────────
-st.subheader("📋 Comparison Table")
+st.subheader("Comparison Table")
 display_cols = [
     "Company", "Market Cap ($B)", "Revenue ($B)", "Revenue Growth %",
     "Gross Margin %", "Op. Margin %", "Net Margin %",
@@ -102,7 +102,7 @@ def bar_compare(metric: str, title: str, suffix: str = "%"):
     st.plotly_chart(fig, use_container_width=True)
 
 # ─── Profitability ─────────────────────────────────────────────────────────────
-st.subheader("💰 Profitability")
+st.subheader("Profitability")
 c1, c2, c3 = st.columns(3)
 with c1: bar_compare("Gross Margin %",    "Gross Margin (%)")
 with c2: bar_compare("Op. Margin %",      "Operating Margin (%)")
@@ -125,7 +125,7 @@ with c3: bar_compare("P/E",           "P/E Ratio (x)",       "x")
 st.divider()
 
 # ─── Scatter plots ─────────────────────────────────────────────────────────────
-st.subheader("🔵 Scatter Analysis")
+st.subheader("Scatter Analysis")
 tab_s1, tab_s2, tab_s3 = st.tabs([
     "ROE vs Revenue Growth", "Margin vs Asset Turnover", "Risk vs Return"
 ])

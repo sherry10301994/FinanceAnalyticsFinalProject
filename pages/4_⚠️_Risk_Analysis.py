@@ -24,7 +24,7 @@ history       = data["history"]
 market_cap    = info.get("marketCap")
 
 company_name = info.get("longName", ticker)
-st.title(f"⚠️ Risk Analysis · {company_name} ({ticker})")
+st.title(f"Risk Analysis · {company_name} ({ticker})")
 
 with st.spinner("Running risk models…"):
     z_result = altman_z_score(income_stmt, balance_sheet, market_cap)
@@ -54,7 +54,7 @@ def gauge_chart(value, title, min_val, max_val, boundaries, colors):
 BADGE = {"green": "#2ecc71", "orange": "#f39c12", "red": "#e74c3c"}
 
 # ─── Altman Z-Score ───────────────────────────────────────────────────────────
-st.subheader("🔴 Altman Z-Score — Financial Distress Risk")
+st.subheader("Altman Z-Score — Financial Distress Risk")
 col1, col2 = st.columns(2)
 
 with col1:
@@ -96,7 +96,7 @@ st.markdown("**Zones:** Z > 2.99 = Safe · 1.81–2.99 = Grey · Z < 1.81 = Dist
 st.divider()
 
 # ─── Beneish M-Score ──────────────────────────────────────────────────────────
-st.subheader("🔍 Beneish M-Score — Earnings Manipulation Detection")
+st.subheader("Beneish M-Score — Earnings Manipulation Detection")
 col1, col2 = st.columns(2)
 
 with col1:
@@ -141,7 +141,7 @@ st.markdown("**Threshold:** M > -1.78 = possible manipulation · M < -2.22 = unl
 st.divider()
 
 # ─── CAPM ─────────────────────────────────────────────────────────────────────
-st.subheader("📐 CAPM & Market Risk")
+st.subheader("CAPM & Market Risk")
 if "error" in capm:
     st.error(capm["error"])
 else:
@@ -170,7 +170,7 @@ else:
 st.divider()
 
 # ─── Red-Flag Summary ─────────────────────────────────────────────────────────
-st.subheader("🚦 Red-Flag Summary")
+st.subheader("Red-Flag Summary")
 ratios = calculate_ratios(income_stmt, balance_sheet, cashflow, info)
 flags: list[tuple[str, str, str]] = []
 
