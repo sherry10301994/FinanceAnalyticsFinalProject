@@ -26,13 +26,13 @@ balance_sheet = data["balance_sheet"]
 cashflow      = data["cashflow"]
 company_name  = info.get("longName", ticker)
 
-st.title(f"📰 News & Filings · {company_name} ({ticker})")
+st.title(f"News & Filings · {company_name} ({ticker})")
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📰 News Feed",
-    "📈 Sentiment × Price",
-    "🎯 Interview Prep",
-    "📄 SEC Filings",
+    "News Feed",
+    "Sentiment × Price",
+    "Interview Prep",
+    "SEC Filings",
 ])
 
 
@@ -281,7 +281,7 @@ with tab3:
     with col_hdr:
         st.markdown("Claude generates a tailored interview prep guide based on recent news and financial metrics.")
     with col_btn:
-        run_btn = st.button("🤖 Run Analysis", type="primary", use_container_width=True)
+        run_btn = st.button("Run Analysis", type="primary", use_container_width=True)
 
     if run_btn:
         # Clear stale cache so user can re-run
@@ -330,7 +330,7 @@ with tab3:
 
         # ── Likely interview questions ────────────────────────────────────────
         if result.get("likely_questions"):
-            st.markdown("### 🎯 Likely Interview Questions")
+            st.markdown("### Likely Interview Questions")
             for i, q in enumerate(result["likely_questions"], 1):
                 st.markdown(f"**Q{i}.** {q}")
 
@@ -339,25 +339,25 @@ with tab3:
         # ── Answer frameworks ─────────────────────────────────────────────────
         frameworks = result.get("answer_frameworks", {})
         if frameworks:
-            st.markdown("### 🗂 How to Answer")
+            st.markdown("### How to Answer")
             col_l, col_r = st.columns(2)
             with col_l:
                 if frameworks.get("business_overview"):
-                    with st.expander("📌 Business Overview (60-sec answer)", expanded=True):
+                    with st.expander("Business Overview (60-sec answer)", expanded=True):
                         st.write(frameworks["business_overview"])
                 if frameworks.get("investment_thesis"):
-                    with st.expander("📈 Investment Thesis Framework", expanded=True):
+                    with st.expander("Investment Thesis Framework", expanded=True):
                         st.write(frameworks["investment_thesis"])
             with col_r:
                 if frameworks.get("valuation"):
-                    with st.expander("💰 Valuation Approach", expanded=True):
+                    with st.expander("Valuation Approach", expanded=True):
                         st.write(frameworks["valuation"])
 
         st.divider()
 
         # ── Modeling guidance ─────────────────────────────────────────────────
         if result.get("modeling_guidance"):
-            st.markdown("### 🔢 Modeling Guidance")
+            st.markdown("### Modeling Guidance")
             for tip in result["modeling_guidance"]:
                 st.markdown(f"- {tip}")
 
@@ -367,13 +367,13 @@ with tab3:
         col_l, col_r = st.columns(2)
         with col_l:
             if result.get("key_metrics"):
-                st.markdown("### 📊 Key Metrics to Know")
+                st.markdown("### Key Metrics to Know")
                 for m in result["key_metrics"]:
                     st.markdown(f"- {m}")
 
         with col_r:
             if result.get("recent_developments"):
-                st.markdown("### 📰 Recent Developments")
+                st.markdown("### Recent Developments")
                 for d in result["recent_developments"]:
                     st.markdown(f"- {d}")
 
@@ -383,12 +383,12 @@ with tab3:
         col_l, col_r = st.columns(2)
         with col_l:
             if result.get("upside_catalysts"):
-                st.markdown("**✅ Upside Catalysts**")
+                st.markdown("**Upside Catalysts**")
                 for c in result["upside_catalysts"]:
                     st.markdown(f"- {c}")
         with col_r:
             if result.get("downside_risks"):
-                st.markdown("**⚠️ Downside Risks**")
+                st.markdown("**Downside Risks**")
                 for r in result["downside_risks"]:
                     st.markdown(f"- {r}")
 
