@@ -10,7 +10,7 @@ from utils.financial_metrics import calculate_ratios, dupont_analysis
 
 st.set_page_config(
     page_title="FinSight",
-    page_icon="📊",
+    page_icon="F",
     layout="wide",
     initial_sidebar_state="expanded",
 )

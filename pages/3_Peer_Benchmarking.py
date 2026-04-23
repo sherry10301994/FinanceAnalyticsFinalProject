@@ -116,7 +116,7 @@ with c3: bar_compare("Revenue Growth %", "Revenue Growth YoY (%)")
 st.divider()
 
 # ─── Leverage & Valuation ──────────────────────────────────────────────────────
-st.subheader("🏗️ Leverage & Valuation")
+st.subheader("Leverage & Valuation")
 c1, c2, c3 = st.columns(3)
 with c1: bar_compare("Debt/Equity",   "Debt / Equity (x)", "x")
 with c2: bar_compare("Current Ratio", "Current Ratio (x)",  "x")

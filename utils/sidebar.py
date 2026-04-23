@@ -17,19 +17,24 @@ def render_sidebar(default_ticker: str = "AAPL",
         default_peers = ["MSFT", "GOOGL", "META"]
 
     with st.sidebar:
-        st.title("📊 FinSight")
-        st.caption("Financial Analytics for Interview Prep")
+        st.markdown(
+            "<div style='font-size:1.35rem;font-weight:700;color:#f1f5f9;"
+            "letter-spacing:-0.01em;padding:0.25rem 0 0.1rem'>FinSight</div>"
+            "<div style='font-size:0.78rem;color:#64748b;margin-bottom:0.5rem'>"
+            "Financial Analytics for Interview Prep</div>",
+            unsafe_allow_html=True,
+        )
 
         # ── WRDS Connection ──────────────────────────────────────────────────
         st.divider()
-        st.markdown("**🔗 Data Source**")
+        st.markdown("**Data Source**")
 
         conn = st.session_state.get("wrds_conn")
 
         if conn:
-            source_label = "🟢 WRDS connected"
+            source_label = "WRDS connected"
         else:
-            source_label = "🔴 Not connected — use WRDS Login below"
+            source_label = "Not connected — use WRDS Login below"
         st.caption(source_label)
 
         # ── WRDS Connection ──────────────────────────────────────────────────
@@ -96,7 +101,7 @@ def render_sidebar(default_ticker: str = "AAPL",
             height=100,
         )
 
-        if st.button("🔍 Analyze", type="primary", use_container_width=True):
+        if st.button("Analyze", type="primary", use_container_width=True):
             new_peers = [p.strip().upper() for p in peers_raw.splitlines() if p.strip()]
             ticker_changed = ticker_input != st.session_state.get("ticker")
             if ticker_changed:
@@ -149,7 +154,7 @@ def _connect_wrds(username: str, password: str):
         st.session_state["wrds_conn"]     = conn
         st.session_state["wrds_username"] = username
         invalidate_cache()
-        st.success("✅ Connected to WRDS!")
+        st.success("Connected to WRDS!")
         st.rerun()
     except Exception as e:
         st.error(f"Connection failed: {e}")
