@@ -229,6 +229,7 @@ pg = st.navigation(
             st.Page("pages/2_Trend_Analysis.py",   title="Trend Analysis"),
             st.Page("pages/3_Peer_Benchmarking.py", title="Peer Benchmarking"),
             st.Page("pages/4_Risk_Analysis.py",    title="Risk Analysis"),
+            st.Page("pages/6_Valuation.py",        title="Valuation (DCF)"),
             st.Page("pages/5_News_Filings.py",     title="News & Filings"),
         ],
     }
