@@ -110,9 +110,8 @@ def render_sidebar(default_ticker: str = "AAPL",
                 if finnhub_key:
                     from utils.finnhub_news import get_peer_tickers
                     auto_peers = get_peer_tickers(ticker_input, finnhub_key)
-                    st.session_state["peers"] = auto_peers if auto_peers else []
-                else:
-                    st.session_state["peers"] = []
+                    if auto_peers:
+                        st.session_state["peers"] = auto_peers
             else:
                 st.session_state["peers"] = new_peers
             st.session_state["ticker"] = ticker_input
