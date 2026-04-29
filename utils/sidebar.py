@@ -148,10 +148,18 @@ def _connect_wrds(username: str, password: str):
             user=username,
             password=password,
             sslmode="require",
+            connect_timeout=20,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5,
+            options="-c statement_timeout=40000",
         )
+        raw.autocommit = True  # each query is independent; a failed query never poisons subsequent ones
         conn = _WRDSConn(raw)
         st.session_state["wrds_conn"]     = conn
         st.session_state["wrds_username"] = username
+        st.session_state["wrds_password"] = password
         invalidate_cache()
         st.success("Connected to WRDS!")
         st.rerun()

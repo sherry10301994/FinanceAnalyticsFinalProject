@@ -144,22 +144,31 @@ def extract_dcf_inputs(income_stmt: pd.DataFrame,
 
 # ─── Beta from price history ───────────────────────────────────────────────────
 
-def calc_beta_from_history(stock_history: pd.DataFrame) -> float | None:
+def calc_beta_from_history(stock_history: pd.DataFrame,
+                            market_returns: pd.Series | None = None) -> float | None:
     """
-    Regress daily stock returns on SPY (S&P 500) returns.
-    Fetches SPY via yfinance. Returns beta or None on failure.
+    Regress daily stock returns on market returns (OLS).
+    market_returns: daily return Series from crsp.dsi (value-weighted).
+    Falls back to fetching SPY via yfinance if market_returns not provided.
+    Returns beta or None on failure.
     """
     try:
-        import yfinance as yf
-        spy = yf.download("SPY", period="5y", progress=False, auto_adjust=True)
-        if spy.empty:
-            return None
-        spy_ret = spy["Close"].pct_change().dropna()
         stk_ret = stock_history["Close"].astype(float).pct_change().dropna()
-        joined  = pd.concat([stk_ret.rename("stk"), spy_ret.rename("spy")], axis=1).dropna()
+
+        if market_returns is not None and not market_returns.empty:
+            mkt_ret = market_returns
+        else:
+            # Fallback: try yfinance SPY
+            import yfinance as yf
+            spy = yf.download("SPY", period="5y", progress=False, auto_adjust=True)
+            if spy.empty:
+                return None
+            mkt_ret = spy["Close"].pct_change().dropna()
+
+        joined = pd.concat([stk_ret.rename("stk"), mkt_ret.rename("mkt")], axis=1).dropna()
         if len(joined) < 60:
             return None
-        slope, *_ = stats.linregress(joined["spy"], joined["stk"])
+        slope, *_ = stats.linregress(joined["mkt"], joined["stk"])
         return round(float(slope), 3)
     except Exception:
         return None

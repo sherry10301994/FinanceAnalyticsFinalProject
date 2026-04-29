@@ -12,7 +12,6 @@ Output DataFrames match the yfinance-style format used throughout the app:
 """
 
 import pandas as pd
-import numpy as np
 import streamlit as st
 from datetime import datetime, timedelta
 
@@ -23,31 +22,11 @@ class _WRDSConn:
         self.connection = psycopg2_conn
 
     def raw_sql(self, sql: str, date_cols=None):
-        return _sql(self, sql, date_cols=date_cols)
-
-
-def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
-    """
-    Run a SQL query via wrds connection, compatible with all wrds/pandas versions.
-    1. Try conn.raw_sql() (wrds native)
-    2. Try direct psycopg2 cursor via conn.connection
-    3. Try SQLAlchemy engine via conn.engine
-    """
-    date_cols = date_cols or []
-
-    # Attempt 1: wrds native
-    try:
-        return conn.raw_sql(sql, date_cols=date_cols)
-    except Exception:
-        pass
-
-    # Attempt 2: direct psycopg2 cursor (bypasses pandas/SQLAlchemy entirely)
-    try:
-        cursor = conn.connection.cursor()
+        date_cols = date_cols or []
+        cursor = self.connection.cursor()
         cursor.execute(sql)
         cols = [d[0] for d in cursor.description]
         df = pd.DataFrame(cursor.fetchall(), columns=cols)
-        # psycopg2 returns decimal.Decimal for numeric columns — convert to float
         for col in df.columns:
             if col not in date_cols:
                 df[col] = pd.to_numeric(df[col], errors="ignore")
@@ -55,17 +34,94 @@ def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
         return df
+
+
+def _reconnect(conn) -> bool:
+    """Re-establish the psycopg2 connection using stored credentials. Returns True on success."""
+    username = st.session_state.get("wrds_username", "")
+    password = st.session_state.get("wrds_password", "")
+    if not username or not password:
+        return False
+    try:
+        import psycopg2
+        new_raw = psycopg2.connect(
+            host="wrds-pgdata.wharton.upenn.edu",
+            port=9737, dbname="wrds",
+            user=username, password=password,
+            sslmode="require",
+            connect_timeout=20,
+            keepalives=1, keepalives_idle=30,
+            keepalives_interval=10, keepalives_count=5,
+            options="-c statement_timeout=40000",
+        )
+        new_raw.autocommit = True
+        conn.connection = new_raw
+        st.session_state["wrds_conn"] = conn
+        return True
+    except Exception:
+        return False
+
+
+def _try_query(conn, sql: str, date_cols: list) -> pd.DataFrame | None:
+    """Try all available query methods. Returns DataFrame or None if all fail."""
+    # Attempt 1: wrds native
+    try:
+        return conn.raw_sql(sql, date_cols=date_cols)
     except Exception:
         pass
 
-    # Attempt 3: SQLAlchemy engine
-    import sqlalchemy as sa
-    with conn.engine.connect() as c:
-        df = pd.read_sql_query(sql, c)
-        for col in date_cols:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col])
-        return df
+    # Attempt 2: direct psycopg2 cursor
+    raw_conn = getattr(conn, "connection", None)
+    if raw_conn is not None:
+        try:
+            cursor = raw_conn.cursor()
+            cursor.execute(sql)
+            cols = [d[0] for d in cursor.description]
+            df = pd.DataFrame(cursor.fetchall(), columns=cols)
+            for col in df.columns:
+                if col not in date_cols:
+                    df[col] = pd.to_numeric(df[col], errors="ignore")
+            for col in date_cols:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col])
+            return df
+        except Exception:
+            pass
+
+    # Attempt 3: SQLAlchemy engine (only available on native wrds.Connection)
+    engine = getattr(conn, "engine", None)
+    if engine is not None:
+        try:
+            with engine.connect() as c:
+                df = pd.read_sql_query(sql, c)
+                for col in date_cols:
+                    if col in df.columns:
+                        df[col] = pd.to_datetime(df[col])
+                return df
+        except Exception:
+            pass
+
+    return None
+
+
+def _sql(conn, sql: str, date_cols: list = None) -> pd.DataFrame:
+    """
+    Run a SQL query via wrds connection, compatible with all wrds/pandas versions.
+    Tries all available methods; if all fail, reconnects once and retries.
+    """
+    date_cols = date_cols or []
+
+    result = _try_query(conn, sql, date_cols)
+    if result is not None:
+        return result
+
+    # All methods failed — connection is likely stale. Reconnect and retry once.
+    if _reconnect(conn):
+        result = _try_query(conn, sql, date_cols)
+        if result is not None:
+            return result
+
+    raise RuntimeError("WRDS connection timed out. Please reconnect in the sidebar.")
 
 
 # ─── Connection ───────────────────────────────────────────────────────────────
@@ -356,6 +412,38 @@ def get_crsp_prices(conn, ticker: str, n_years: int = 5) -> pd.DataFrame:
 
     print(f"Could not fetch prices for {ticker}.")
     return pd.DataFrame()
+
+# ─── CRSP market returns ──────────────────────────────────────────────────────
+
+def get_crsp_market_returns(conn, n_years: int = 5) -> pd.Series:
+    """
+    Fetch daily value-weighted market returns from crsp.dsi.
+    Returns a Series indexed by date with daily return values.
+    Tries dsi_v2 first, falls back to legacy dsi.
+    """
+    start_date = (datetime.now() - timedelta(days=365 * n_years)).strftime("%Y-%m-%d")
+
+    for table, date_col, ret_col in [
+        ("crsp.dsi_v2", "caldt", "vwretd"),
+        ("crsp.dsi",    "caldt", "vwretd"),
+    ]:
+        try:
+            sql = f"""
+                SELECT {date_col} AS date, {ret_col} AS mkt_ret
+                FROM {table}
+                WHERE {date_col} >= '{start_date}'
+                ORDER BY {date_col}
+            """
+            df = _sql(conn, sql, date_cols=["date"])
+            if df is not None and not df.empty:
+                df = df.dropna(subset=["mkt_ret"])
+                df["date"] = pd.to_datetime(df["date"])
+                return df.set_index("date")["mkt_ret"].astype(float)
+        except Exception:
+            continue
+
+    return pd.Series(dtype=float)
+
 
 # ─── Peer lookup ──────────────────────────────────────────────────────────────
 

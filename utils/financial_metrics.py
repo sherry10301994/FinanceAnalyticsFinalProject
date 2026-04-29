@@ -97,6 +97,14 @@ def calculate_ratios(
 
     market_cap = info.get("marketCap")
     pe_trailing = info.get("trailingPE")
+    # Compustat fallback: price (prcc_f) / diluted EPS, then market cap / net income
+    if pe_trailing is None:
+        price = info.get("currentPrice")
+        if price and eps_diluted and eps_diluted > 0:
+            pe_trailing = price / eps_diluted
+    if pe_trailing is None:
+        if market_cap and net_income and net_income > 0:
+            pe_trailing = market_cap / net_income
     pb = info.get("priceToBook")
     ps = info.get("priceToSalesTrailing12Months")
     beta = info.get("beta")

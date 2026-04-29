@@ -83,7 +83,7 @@ with tab1:
                 ))
         fig.update_layout(
             title="Margin Trends (%)", yaxis_title="%", height=320,
-            margin=dict(l=0, r=0, t=40, b=0),
+            margin=dict(l=0, r=0, t=40, b=40),
             plot_bgcolor="white", paper_bgcolor="white",
             xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
@@ -122,7 +122,7 @@ with tab2:
                 ))
         fig2.update_layout(
             title="Revenue vs. Cash Flows ($B)", barmode="group", height=320,
-            margin=dict(l=0, r=0, t=40, b=0),
+            margin=dict(l=0, r=0, t=40, b=40),
             plot_bgcolor="white", paper_bgcolor="white",
         )
         st.plotly_chart(fig2, use_container_width=True)
@@ -171,7 +171,7 @@ with tab4:
         ))
         fig3.update_layout(
             title="Capital Structure (Latest Year)", height=300,
-            margin=dict(l=0, r=0, t=40, b=0),
+            margin=dict(l=0, r=0, t=40, b=40),
         )
         st.plotly_chart(fig3, use_container_width=True)
 

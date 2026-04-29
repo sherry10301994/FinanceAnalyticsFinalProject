@@ -18,6 +18,17 @@ ticker, peers = render_sidebar()
 with st.spinner(f"Loading {ticker}…"):
     data = fetch_ticker_data(ticker)
 
+# Fetch CRSP market returns from WRDS for beta regression
+_mkt_cache = f"crsp_mkt_returns"
+if _mkt_cache not in st.session_state:
+    conn = st.session_state.get("wrds_conn")
+    if conn is not None:
+        from utils.wrds_fetcher import get_crsp_market_returns
+        st.session_state[_mkt_cache] = get_crsp_market_returns(conn)
+    else:
+        st.session_state[_mkt_cache] = None
+market_returns = st.session_state.get(_mkt_cache)
+
 info          = data.get("info", {})
 income_stmt   = data.get("income_stmt", pd.DataFrame())
 balance_sheet = data.get("balance_sheet", pd.DataFrame())
@@ -97,7 +108,7 @@ with col_chart:
         ))
     fig.update_layout(
         title="Cash Flow History ($B)", barmode="group", height=260,
-        margin=dict(l=0, r=0, t=36, b=0),
+        margin=dict(l=0, r=0, t=36, b=40),
         legend=dict(orientation="h", y=1.12),
         plot_bgcolor="white", paper_bgcolor="white",
         yaxis=dict(showgrid=True, gridcolor="#f0f0f0", title="$B"),
@@ -135,7 +146,7 @@ def _make_reg_fig(title, hist_x, hist_y, fitted_y, proj_x, proj_y, r2, y_title):
         marker=dict(size=8, symbol="circle-open"),
     ))
     fig.update_layout(
-        height=340, margin=dict(l=0, r=0, t=45, b=0),
+        height=340, margin=dict(l=0, r=0, t=45, b=40),
         plot_bgcolor="white", paper_bgcolor="white",
         legend=dict(orientation="h", yanchor="bottom", y=-0.25, x=0),
         xaxis=dict(showgrid=False),
@@ -262,7 +273,7 @@ with col_wacc:
     with st.spinner("Estimating beta…"):
         beta_calc = None
         if not history.empty:
-            beta_calc = calc_beta_from_history(history)
+            beta_calc = calc_beta_from_history(history, market_returns)
     beta_default = beta_calc or info.get("beta") or 1.0
     beta = st.slider("Beta", 0.1, 3.0, round(float(beta_default), 2), 0.05,
                       help=f"{'Regression from CRSP vs SPY' if beta_calc else 'From yfinance / default'}: {beta_default:.2f}")
@@ -380,7 +391,7 @@ with col_bridge:
     ))
     fig_bridge.update_layout(
         title="EV Bridge ($B)", height=260,
-        margin=dict(l=0, r=0, t=36, b=0),
+        margin=dict(l=0, r=0, t=36, b=40),
         plot_bgcolor="white", paper_bgcolor="white",
         yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
         showlegend=False,
@@ -435,8 +446,9 @@ R² = {f"{ebit_m_reg['r2']:.2f}" if ebit_m_reg.get('r2') is not None else 'N/A'}
 
 **FCFF formula:** EBIT(1−t) − Net CapEx + ΔWorking Capital, where Net CapEx = CapEx − Depreciation. Matches course definition.
 
-**WACC:** CAPM for cost of equity (Ke = Rf + β × ERP). Beta estimated by regressing daily CRSP returns
-on SPY. Cost of debt from historical interest expense / total debt.
+**WACC:** CAPM for cost of equity (Ke = Rf + β × ERP). Beta estimated by OLS regression of daily
+CRSP stock returns against CRSP value-weighted market returns (`crsp.dsi`). Falls back to reported
+beta or 1.0 if WRDS unavailable. Cost of debt = interest expense / total debt (Compustat).
 
 **Terminal value:** Gordon Growth Model — FCF₅ × (1 + g) / (WACC − g).
 """)

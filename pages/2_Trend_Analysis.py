@@ -40,7 +40,7 @@ def line_chart(df, cols, title, y_label, scale=1e9, height=320):
             ))
     fig.update_layout(
         title=title, yaxis_title=y_label, height=height,
-        margin=dict(l=0, r=0, t=40, b=0),
+        margin=dict(l=0, r=0, t=40, b=60),
         plot_bgcolor="white", paper_bgcolor="white",
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
@@ -74,7 +74,7 @@ with tab1:
                 ))
                 fig2.update_layout(
                     title="Revenue Growth YoY (%)", yaxis_title="%", height=320,
-                    margin=dict(l=0, r=0, t=40, b=0),
+                    margin=dict(l=0, r=0, t=40, b=40),
                     plot_bgcolor="white", paper_bgcolor="white", showlegend=False,
                 )
                 st.plotly_chart(fig2, use_container_width=True)
@@ -94,7 +94,7 @@ with tab1:
                         ))
                 fig4.update_layout(
                     title="Cash Flows ($B)", barmode="group", height=320,
-                    margin=dict(l=0, r=0, t=40, b=0),
+                    margin=dict(l=0, r=0, t=40, b=40),
                     plot_bgcolor="white", paper_bgcolor="white",
                 )
                 st.plotly_chart(fig4, use_container_width=True)
@@ -124,7 +124,7 @@ with tab2:
             ))
             fig3.update_layout(
                 title="Debt / Equity Ratio", yaxis_title="x", height=280,
-                margin=dict(l=0, r=0, t=40, b=0),
+                margin=dict(l=0, r=0, t=40, b=40),
                 plot_bgcolor="white", paper_bgcolor="white",
             )
             st.plotly_chart(fig3, use_container_width=True)
@@ -144,7 +144,7 @@ with tab3:
         ))
         fig.update_layout(
             title=f"{ticker} Stock Price ({period_opt})", yaxis_title="Price (USD)",
-            height=400, margin=dict(l=0, r=0, t=40, b=0),
+            height=400, margin=dict(l=0, r=0, t=40, b=40),
             plot_bgcolor="white", paper_bgcolor="white",
             xaxis_rangeslider_visible=False,
         )
@@ -159,7 +159,7 @@ with tab3:
         fig2.add_hline(y=0, line_dash="dash", line_color="#999")
         fig2.update_layout(
             title="Cumulative Return", yaxis_title="%", height=260,
-            margin=dict(l=0, r=0, t=40, b=0),
+            margin=dict(l=0, r=0, t=40, b=40),
             plot_bgcolor="white", paper_bgcolor="white",
         )
         st.plotly_chart(fig2, use_container_width=True)
@@ -195,7 +195,7 @@ with tab4:
                                          name=name, marker_color=color))
                 fig2.update_layout(
                     title="Capital Structure ($B)", barmode="stack", height=320,
-                    margin=dict(l=0, r=0, t=40, b=0),
+                    margin=dict(l=0, r=0, t=40, b=40),
                     plot_bgcolor="white", paper_bgcolor="white",
                 )
                 st.plotly_chart(fig2, use_container_width=True)

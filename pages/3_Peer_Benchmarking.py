@@ -95,7 +95,7 @@ def bar_compare(metric: str, title: str, suffix: str = "%"):
     ))
     fig.update_layout(
         title=title, height=300, showlegend=False,
-        margin=dict(l=0, r=0, t=40, b=0),
+        margin=dict(l=0, r=0, t=40, b=40),
         plot_bgcolor="white", paper_bgcolor="white",
         yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
     )
@@ -149,7 +149,7 @@ def scatter(x_col, y_col, x_label, y_label, title):
         ))
     fig.update_layout(
         title=title, xaxis_title=x_label, yaxis_title=y_label,
-        height=380, margin=dict(l=0, r=0, t=40, b=0),
+        height=380, margin=dict(l=0, r=0, t=40, b=40),
         plot_bgcolor="white", paper_bgcolor="white",
         xaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
         yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
