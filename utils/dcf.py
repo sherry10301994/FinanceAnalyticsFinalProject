@@ -144,6 +144,16 @@ def extract_dcf_inputs(income_stmt: pd.DataFrame,
 
 # ─── Beta from price history ───────────────────────────────────────────────────
 
+def _normalize_index(s: pd.Series) -> pd.Series:
+    """Strip timezone and normalize to midnight so CRSP and yfinance dates align."""
+    idx = pd.to_datetime(s.index)
+    if idx.tz is not None:
+        idx = idx.tz_localize(None)
+    s = s.copy()
+    s.index = idx.normalize()
+    return s
+
+
 def calc_beta_from_history(stock_history: pd.DataFrame,
                             market_returns: pd.Series | None = None) -> float | None:
     """
@@ -153,17 +163,18 @@ def calc_beta_from_history(stock_history: pd.DataFrame,
     Returns beta or None on failure.
     """
     try:
-        stk_ret = stock_history["Close"].astype(float).pct_change().dropna()
+        stk_ret = _normalize_index(stock_history["Close"].astype(float)).pct_change().dropna()
 
         if market_returns is not None and not market_returns.empty:
-            mkt_ret = market_returns
+            # CRSP returns are already daily return values
+            mkt_ret = _normalize_index(market_returns).dropna()
         else:
-            # Fallback: try yfinance SPY
+            # Fallback: yfinance SPY prices → convert to returns
             import yfinance as yf
-            spy = yf.download("SPY", period="5y", progress=False, auto_adjust=True)
+            spy = yf.Ticker("SPY").history(period="5y")
             if spy.empty:
                 return None
-            mkt_ret = spy["Close"].pct_change().dropna()
+            mkt_ret = _normalize_index(spy["Close"].astype(float)).pct_change().dropna()
 
         joined = pd.concat([stk_ret.rename("stk"), mkt_ret.rename("mkt")], axis=1).dropna()
         if len(joined) < 60:

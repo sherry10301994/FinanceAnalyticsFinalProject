@@ -19,14 +19,16 @@ with st.spinner(f"Loading {ticker}…"):
     data = fetch_ticker_data(ticker)
 
 # Fetch CRSP market returns from WRDS for beta regression
-_mkt_cache = f"crsp_mkt_returns"
-if _mkt_cache not in st.session_state:
+# Re-fetch if previously cached as None (e.g. page was loaded before WRDS connected)
+_mkt_cache = "crsp_mkt_returns"
+_cached_mkt = st.session_state.get(_mkt_cache)
+if _cached_mkt is None or (hasattr(_cached_mkt, "empty") and _cached_mkt.empty):
     conn = st.session_state.get("wrds_conn")
     if conn is not None:
         from utils.wrds_fetcher import get_crsp_market_returns
-        st.session_state[_mkt_cache] = get_crsp_market_returns(conn)
-    else:
-        st.session_state[_mkt_cache] = None
+        _fetched = get_crsp_market_returns(conn)
+        if _fetched is not None and not _fetched.empty:
+            st.session_state[_mkt_cache] = _fetched
 market_returns = st.session_state.get(_mkt_cache)
 
 info          = data.get("info", {})
