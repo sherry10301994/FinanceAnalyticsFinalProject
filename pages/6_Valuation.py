@@ -25,10 +25,13 @@ _cached_mkt = st.session_state.get(_mkt_cache)
 if _cached_mkt is None or (hasattr(_cached_mkt, "empty") and _cached_mkt.empty):
     conn = st.session_state.get("wrds_conn")
     if conn is not None:
-        from utils.wrds_fetcher import get_crsp_market_returns
-        _fetched = get_crsp_market_returns(conn)
-        if _fetched is not None and not _fetched.empty:
-            st.session_state[_mkt_cache] = _fetched
+        try:
+            from utils.wrds_fetcher import get_crsp_market_returns
+            _fetched = get_crsp_market_returns(conn)
+            if _fetched is not None and not _fetched.empty:
+                st.session_state[_mkt_cache] = _fetched
+        except Exception as _e:
+            st.warning(f"CRSP market returns unavailable (beta will use SPY fallback): {_e}")
 market_returns = st.session_state.get(_mkt_cache)
 
 info          = data.get("info", {})
